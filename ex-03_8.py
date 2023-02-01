@@ -71,7 +71,7 @@ def main(spark):
         .show(10, False)
     )
 
-    # 컬럼 이름바꾸기 
+    # 컬럼 이름바꾸기
     (fire_df.select("Delay").where(col("Delay") > 5).show(5, False))
 
     new_fire_df = fire_df.withColumnRenamed("Delay", "ResponseDelayedinMins")
@@ -81,7 +81,110 @@ def main(spark):
         .show(5, False)
     )
 
-    fi
+    # 컬럼 타입 변환
+    fire_ts_df = (
+        new_fire_df.withColumn(
+            "IncidentDate", to_timestamp(col("CallDate"), "MM/dd/yyyy")
+        )
+        .drop("CallDate")
+        .withColumn("OnWatchDate", to_timestamp(col("WatchDate"), "MM/dd/yyyy"))
+        .drop("WatchDate")
+        .withColumn(
+            "AvailableDtTS",
+            to_timestamp(col("AvailableDtTm"), "MM/dd/yyyy hh:mm:ss a"),
+        )  # 24시간 표시로 변경됨
+        # .withColumn( # 변환된 데이터도 am pm을 달고 싶은데 잘 안되네, 24시간 표시로 되었으니 변경은 조금만 찾으면 될듯
+        #     "AvailableDtTSA",
+        #     to_timestamp(col("AvailableDtTm"), "MM/dd/yyyy hh:mm:ss a")
+        #     # .cast(
+        #     #     TimestampType()), "MM-dd-yyyy hh:mm:ss a"
+        #     )
+    )
+
+    (
+        fire_ts_df.select(
+            "IncidentDate",
+            "OnWatchDate",
+            "AvailableDtTm",
+            "AvailableDtTS"  # ,
+            # "AvailableDtTSA",
+        ).show(10, False)
+    )
+
+    # 이제 date/time 연산이 가능함
+    (
+        fire_ts_df.select(year("IncidentDate"))
+        .distinct()
+        .orderBy(year("IncidentDate"))
+        .show()
+    )
+
+    # 집계연산 aggregation
+
+    # 가장 흔한 형태의 신고는?
+    (
+        fire_ts_df.select("CallType")
+        .where(col("CallType").isNotNull())
+        .groupBy("CallType")
+        .count()
+        .orderBy("count", ascending=False)
+        .show(n=10, truncate=False)
+    )
+
+    # 통계함수
+    import pyspark.sql.functions as F
+
+    (
+        fire_ts_df.select(
+            F.sum("NumAlarms"),
+            F.avg("ResponseDelayedinMins"),
+            F.min("ResponseDelayedinMins"),
+            F.max("ResponseDelayedinMins"),
+        ).show()
+    )
+
+    # 예제 : 2018년에 왔던 신고 전화들의 모든 유형은 어떤 것이었는가?
+    (
+        fire_ts_df.select("CallType")
+        .where(year("IncidentDate") == "2018")
+        .distinct()
+        .show()
+    )
+
+    # 예제 : 2018년에 신고 전화가 가장 많았던 달은 언제인가?
+    (
+        fire_ts_df.select(month("IncidentDate"))
+        .where(year("IncidentDate") == "2018")
+        .groupBy(
+            "month(IncidentDate)"
+        )  # month(IncidentDate) 이걸 컬럼이름으로 만들게됨. month("IncidentDate") 아님
+        .count()
+        .orderBy("count", ascending=False)
+        .show()
+    )
+
+    # 예제 : 2018년에 가장 많은 신고가 들어온 샌프란시스코 지역은 어디인가?
+    (
+        fire_ts_df.select("Zipcode")
+        # .where(year("IncidentDate") == "2002")  # 2018년에는 SF 지역이 없음...
+        .where(year("IncidentDate") == "2018")  # 2018년에는 San Francisco 지역임...
+        # .where(col("City") == "SF")
+        .where(col("City") == "San Francisco")
+        .groupBy("Zipcode")
+        .count()
+        .orderBy("count", ascending=False)
+        .show()
+    )
+
+    # 예제 : 2018년에 가장 응답 시간이 늦었던 지역은 어디인가?
+    (
+        fire_ts_df.select("City", "ResponseDelayedinMins")
+        .where(year("IncidentDate") == "2018")
+        .groupBy("City")
+        .max("ResponseDelayedinMins")
+        .orderBy("max(ResponseDelayedinMins)", ascending=False)
+        .show()
+    )
 
 
 if __name__ == "__main__":
