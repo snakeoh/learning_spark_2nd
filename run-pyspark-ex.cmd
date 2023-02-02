@@ -19,7 +19,6 @@ set SPARK_SUBMIT_OPTIONS=^
 set PYSPARK_PYTHON=C:\Users\damon\AppData\Local\Programs\Python\Python38-32\python
 
 set CMD=spark-submit %SPARK_SUBMIT_OPTIONS% ^
-        ex-03_8.py ^
         %*
 
 echo %CMD%
