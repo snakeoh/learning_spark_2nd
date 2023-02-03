@@ -1,14 +1,13 @@
 # learning_spark_2nd
 
-> 현재 윈도우 실행파일만 있음. 리눅스는 추후.. ####실행법
-> run-pyspark-ex.cmd 파일에서
-> 실행할 python 파일의 이름을 수정한다.
-> ex) ex-03_8.py
+> 현재 윈도우 실행파일만 있음. 리눅스는 추후..
 
-그리고 cmd에서
+####실행법
+실행할 py 파일이 ex.py라고 한다면
+cmd에서
 
 ```
-.\run-pyspark-ex.cmd <args>
+.\run-pyspark-ex.cmd ex.py <args>
 ```
 
 #### 필요사항
