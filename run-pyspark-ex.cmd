@@ -16,7 +16,8 @@ set SPARK_SUBMIT_OPTIONS=^
     @REM  --conf spark.ui.port=9040 \
     @REM  --conf spark.kryo.registrator=org.datasyslab.geospark.serde.GeoSparkKryoRegistrator
 
-set PYSPARK_PYTHON=C:\Users\damon\AppData\Local\Programs\Python\Python38-32\python
+@REM set PYSPARK_PYTHON=C:\Users\damon\AppData\Local\Programs\Python\Python38-32\python
+set PYSPARK_PYTHON=C:\Users\damon\.conda\envs\py37\python.exe
 
 set CMD=spark-submit %SPARK_SUBMIT_OPTIONS% ^
         %*
