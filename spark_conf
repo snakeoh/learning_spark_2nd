@@ -1,0 +1,69 @@
+yarn queue 설정
+https://taaewoo.tistory.com/57
+
+yarn에서 queue를 생성 - 사용자나 그릅, 컴포넌트에 queue 할당
+
+yarn.scheduler.capacity.root.default.capacity=80
+yarn.scheduler.capacity.root.default.maximum-capacity=80
+yarn.scheduler.capacity.root.queues=default,userq
+yarn.scheduler.capacity.root.userq.capacity=20
+yarn.scheduler.capacity.root.userq.maximum-capacity=20
+
+yarn.scheduler.capacity
+.queue-mappings
+
+
+dynamic allocation
+spark.dynamicAllocation.enabled true
+spark.dynamicAllocation.minExecutors 2 
+spark.dynamicAllocation.schedulerBacklogTimeout 1m  # 태스크 큐 백로그가 늘어나면 매번 백로그 타임아웃 시간(1분)이 될 때마다 새로운 익스큐터 요청
+spark.dynamicAllocation.maxExecutors 20
+spark.dynamicAllocation.executorIdleTimeout 2m # 2분동안 놀고있으면 반환
+
+
+Memory Management
+	spark.memory.fraction # 익스큐터의 실행메모리 비율(나머지가 저장메모리)
+
+표71 맵과 셔플 작업 중의 1/O를 조절할 수 있는 스파크 설정들
+	설정 이름	기본값, 추천값, 설명
+	spark.driver.memory	기본값은 1g(1GB)이다. 이는 스파크 드라이버가 이그제큐터들에게 데이터를
+	 받기 위해 할당되는 메모리의 양을 나타낸다. 이 값은 종종 spark-submite
+	--driver-memory 옵션에 의해 바뀐다.
+	이 값은 collect() 같은 함수로 드라이버가 많은 데이터를 받아 와야 하는 경우 메모리가 부족할 수 있으므로 조정하도록 한다.
+
+	spark.shuffle.file.buffer	기본값은 32KB이다. 1MB를 추천한다. 이는 스파크가 맵 결과를 디스크에
+	쓰기 전에 버퍼링을 더 많이 할 수 있게 한다.
+
+	spark.file.transferTo	기본값은 true이다. 이를 false로 바꾸면 스파크가 디스크에 쓰기 전에 파일
+	버퍼를 사용하도록 하며 이는 I/O 횟수를 줄일 수 있다.
+
+	spark.shuffle.unsafe.file.output.buffer	기본값은 32KB이다. 셔플 작업 중 파일을 병합할 때 가능한 버퍼의 양을
+	조절한다. 일반적으로는 큰 값(예: 1MB)이 대용량 워크로드에는 적합하지만 일반적인 워크로드에는 기본값도 잘 동작한다.
+
+	spark.io.compression.lz4.blockSize	
+	기본값은 32KB이다. 512KB로 올리기를 권한다. 압축하는 블록 단위를 크게 함으로써 셔플 파일의 크기를 줄일 수 있다.
+	(lz4만을 위한 옵션이며 snappy 블록 크기를 위한 spark.io.compression.snappy.blockSize 설정도 존재한다)
+
+	spark.shuffle.service.index.cache.size	기본값은 100m이다. 캐시되는 엔트리들 개수는 지정된 메모리 용량에 따라 제한된다.
+
+	spark.shuffle.registration. timeout	기본값은 5000ms이다. 120,000ms로 올리는 것이 좋다. 셔플 서비스 등록을 위한 최대 대기 시간이다.
+
+	spark.shuffle.registration.maxAttempts	기본값은 3이다. 필요하다면 5 정도로 올리자. 서플 서비스 등록 실패 시 재시도 횟수를 결정한다.
+
+
+spark.sql.shuffle.partitions  # 셔플 단계에서 만들어지는 셔플 파티션
+	https://www.youtube.com/watch?v=5dga0UT4RI8
+	https://www.youtube.com/watch?v=6BD-Vv-ViBw
+	https://www.youtube.com/watch?v=F9QhzT_YTWw
+
+DataFrame.cache()
+DataFrame.persist()
+	MEMORY_ONLY_2 같은 옵션이 존재한다. 서로 다른 스파크 이그제큐터에 복제해서 두 벌이 저장되고 장애시에 다른 카피본으로 태스크가 계속 진행
+DataFrame.unpersist()
+
+스파크 조인
+브로드캐스트해시 조인
+	spark.sql.autoBroadcastJoinThreshold	10MB # 작은 쪽 데이터가 10m 이하일때 브로드캐스트 조인 사용
+	
+셔플 소트 머지 조인
+	spark.sql.join.preferSortMergeJoin	
