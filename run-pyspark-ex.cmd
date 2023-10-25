@@ -9,8 +9,9 @@ set SPARK_SUBMIT_OPTIONS=^
     --master local ^
     --driver-memory 1G ^
     --executor-memory 2G ^
-    --conf spark.serializer=org.apache.spark.serializer.KryoSerializer
-    
+    --conf spark.serializer=org.apache.spark.serializer.KryoSerializer ^
+    --packages io.delta:delta-core_2.12:0.8.0
+
     
     @REM --master yarn \
     @REM  --conf spark.ui.port=9040 \
